@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="main.css">
+
+<!-- pygments color theme-->
+<link rel="stylesheet" type="text/css" href="css/native.css">
+
+<script src="data.js"></script>
+</head>
+<body>
+  <div class="header">
+    <input id="stepScrubber" type="range" value="0"></input>
+    <span id="currentStep">0/0</span>
+    <input id="showProofs" type="checkbox">show proofs</input>
+    <input id="showImplicits" type="checkbox">show implicits</input>
+  </div>
+  <div id="code-area">
+  </div>
+
+  <script type="module">
+    var idx = 0;
+    let trace = data.proofs;
+    const currentStep = document.getElementById("currentStep");
+
+    const setIndex = (v) => {
+      idx = v;
+      stepScrubber.value = v;
+      currentStep.innerHTML = `${v + 1}/${trace.length}`
+    }
+    const incrementIndex = () => {
+      let newIdx = idx + 1;
+      if (trace.length <= newIdx) {
+        newIdx = trace.length - 1;
+      }
+      setIndex(newIdx);
+    }
+    const decrementIndex = () => {
+      let newIdx = idx - 1;
+      if (newIdx < 0) {
+        newIdx = 0;
+      }
+      setIndex(newIdx);
+    }
+
+    const stepScrubber = document.getElementById("stepScrubber");
+    stepScrubber.setAttribute('min', 0);
+    stepScrubber.setAttribute('max', trace.length - 1);
+    stepScrubber.oninput = (e) => {
+      const value = parseFloat(stepScrubber.value);
+      setIndex(value);
+      render_code();
+    };
+
+    const showProofs = document.getElementById("showProofs");
+    showProofs.oninput = (e) => {
+      updateSelectedTrace();
+      render_code();
+    }
+
+    const showImplicits = document.getElementById("showImplicits");
+    showImplicits.oninput = (e) => {
+      updateSelectedTrace();
+      render_code();
+    }
+
+    if (!data.explicit || data.explicit == []) {
+      showImplicits.setAttribute("disabled", true);
+    }
+
+    showProofs.checked = true;
+    showImplicits.checked = false;
+
+    const updateSelectedTrace = () => {
+      if (showImplicits.checked) {
+        trace = data.explicit;
+      } else {
+        if (showProofs.checked) {
+          trace = data.proofs;
+        } else {
+          trace = data.plain;
+        }
+      }
+    }
+
+    updateSelectedTrace();
+    setIndex(0);
+
+    function render_code() {
+      const code_area = document.getElementById("code-area");
+      code_area.innerHTML = trace[idx]
+    }
+
+    function stepForward() {
+      incrementIndex();
+      render_code();
+    }
+
+    function stepBackward() {
+      decrementIndex();
+      render_code();
+    }
+
+    render_code();
+ document.addEventListener(
+    "keydown",
+    (event) => {
+      const keyName = event.key;
+
+      if (keyName === " ") {
+        stepForward();
+      } else if (keyName === "ArrowLeft") {
+        stepBackward();
+      } else if (keyName === "ArrowRight") {
+        stepForward();
+      }
+    },
+    false,
+  );
+
+   </script>
+</body>
+</html>
